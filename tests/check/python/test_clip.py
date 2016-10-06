@@ -73,6 +73,7 @@ class TestCopyPaste(unittest.TestCase):
 
 
 class TestTitleClip(unittest.TestCase):
+
     def testGetPropertyNotInTrack(self):
         title_clip = GES.TitleClip.new()
         self.assertEqual(title_clip.props.text, "")
@@ -106,6 +107,7 @@ class TestTitleClip(unittest.TestCase):
 
 
 class TestTrackElements(unittest.TestCase):
+
     def test_add_to_layer_with_effect_remove_add(self):
         timeline = GES.Timeline.new_audio_video()
         self.assertEqual(len(timeline.get_tracks()), 2)
@@ -133,3 +135,17 @@ class TestTrackElements(unittest.TestCase):
         audio_source = test_clip.find_track_element(None, GES.AudioSource)
         self.assertFalse(audio_source is None)
         self.assertEqual(audio_source.get_child_property("volume")[1], 0.0)
+
+
+class TestEditing(GESSimpleTimelineTest):
+
+    def test_transition_disappears_when_editing_to_another_layer(self):
+        self.timeline.props.auto_transition = True
+        unused_clip1 = self.add_clip(0, 0, 100)
+        clip2 = self.add_clip(50, 0, 100)
+        self.assertEquals(len(self.layer.get_clips()), 4)
+
+        layer2 = self.timeline.append_layer()
+        clip2.edit([], layer2.get_priority(), GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, clip2.props.start)
+        self.assertEquals(len(self.layer.get_clips()), 1)
+        self.assertEquals(len(layer2.get_clips()), 1)
